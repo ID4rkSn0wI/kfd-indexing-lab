@@ -1,21 +1,19 @@
-# Ускорь индексацию
+# Speed ​​Up Indexing
 
-Подборка доступных товаров по рекомендациям с учётом исключений и повторений.
+Selecting available products based on recommendations, while accounting for exclusions and duplicates.
 
-## Начало работы
+## Getting Started
 
-[Полное задание](docs/TASK.md). Работа выполняется в собственной копии репозитория.
-
-| Файл | Назначение |
+| File | Purpose |
 | --- | --- |
-| `src/main/kotlin/lab2/Product.kt` | Тип данных |
-| `src/main/kotlin/lab2/ProductSelection.kt` | Функция для самостоятельной реализации |
-| `src/test/kotlin/lab2/ProductSelectionTest.kt` | Тесты обязательной части |
-| `src/main/kotlin/lab2/LimitedProductSelection.kt` | Необязательная часть: индекс и запросы с лимитом |
-| `src/test/kotlin/lab2/LimitedProductSelectionTest.kt` | Тесты необязательной части |
-| `README.md` | Инструкция запуска и ответы по работе |
+| `src/main/kotlin/lab2/Product.kt` | Data type |
+| `src/main/kotlin/lab2/ProductSelection.kt` | Function to be implemented |
+| `src/test/kotlin/lab2/ProductSelectionTest.kt` | Tests for the mandatory part |
+| `src/main/kotlin/lab2/LimitedProductSelection.kt` | Optional part: index and queries with a limit |
+| `src/test/kotlin/lab2/LimitedProductSelectionTest.kt` | Tests for the optional part |
+| `README.md` | Instructions for running the code and assignment responses |
 
-Запуск всех тестов из корня репозитория:
+Run all tests from the repository root:
 
 ```bash
 ./gradlew test
@@ -27,159 +25,142 @@ Windows PowerShell:
 .\gradlew.bat test
 ```
 
-## Основное задание
+## Main Assignment
 
-### Решение
+### Solution
 
-**Файл с реализацией `selectProducts`:**
+**File containing the `selectProducts` implementation:**
 
 `src/main/kotlin/lab2/ProductSelection.kt`
 
-**Как работает функция и почему выбран такой способ обработки данных?**
+**How ​​does the function work, and why was this data-processing approach chosen?**
 
-Функция строит `HashMap<Long, Product>` по доступным товарам каталога, 
-удаляет из неё исключённые ID и обходит рекомендации по порядку. 
-Операция `remove(id)` одновременно находит товар и убирает его из временного индекса: 
-повторный ID уже ничего не возвращает. Найденные товары добавляются в `ArrayList<Product>`.
+The function constructs a `HashMap<Long, Product>` from the available catalog items, removes the excluded IDs, and iterates through the recommendations in order. The `remove(id)` operation simultaneously locates the product and removes it from the temporary index; if an ID appears again, the lookup will return nothing. The identified products are then added to an `ArrayList<Product>`.
 
-**Как сохраняются порядок рекомендаций и уникальность товаров? 
-Как обрабатываются исключённые, недоступные и неизвестные товары?**
+**How ​​are the order of recommendations and the uniqueness of the products preserved?** How are excluded, unavailable, and unknown products handled?**
 
-Порядок определяется последовательным просмотром рекомендаций, 
-а уникальность — удалением найденного товара из временной Map. 
-Исключения удаляются заранее, недоступные товары в индекс не попадают, 
-неизвестные ID не находят соответствий. Возвращаются оригинальные объекты `Product`
+The order is determined by sequentially iterating through the recommendations,
+while uniqueness is ensured by removing each identified product from a temporary `Map`.
+Excluded items are removed beforehand, unavailable products are never added to the index,
+and unknown IDs fail to find a match. The original `Product` objects are returned.
 
-### Сложность
+### Complexity
 
-Обозначения:
+Notation:
 
-- `p` — число товаров в каталоге;
-- `r` — число идентификаторов в рекомендациях;
-- `e` — число идентификаторов в исключениях.
+- `p` — number of products in the catalog;
+- `r` — number of identifiers in the recommendations;
+- `e` — number of identifiers in the exclusion list.
 
-**Время выполнения:**
+**Execution Time:**
 
-**Ожидаемое O(p + e + r)**: построение индекса — O(p), удаление исключений — O(e), 
-обработка рекомендаций — O(r). Оценка справедлива при среднем O(1) 
-для хеш-операций `HashMap`. В худшем случае гарантии O(1) для отдельной операции нет.
+**Expected O(p + e + r)**: building the index takes O(p), removing exclusions takes O(e),
+and processing recommendations takes O(r). This estimate assumes an average O(1)
+time complexity for `HashMap` operations. In the worst case, there is no O(1) guarantee
+for individual operations.
 
-**Дополнительная память:**
+**Additional Memory:**
 
-**O(p)** под временную `HashMap`, содержащую ссылки на доступные товары. 
-**Отдельно O(k)** под результирующий `ArrayList`, где `k` — число выбранных товаров и `k ≤ min(p, r)`. 
-Поэтому суммарная дополнительная память с учётом результата составляет **O(p + k) = O(p)**. 
-При `remove` запись удаляется из Map, но её внутренняя таблица не обязательно уменьшается, 
-одновременно `ArrayList` выделяет память под свои ссылки. Объекты `Product` не копируются, 
-а входные коллекции не изменяются.
+**O(p)** for the temporary `HashMap` containing references to available products.
+Additionally, **O(k)** is required for the resulting `ArrayList`, where `k` is the number
+of selected products, with `k ≤ min(p, r)`.
+Therefore, the total additional memory, including the result, is **O(p + k) = O(p)**.
+When an item is removed from the `Map`, its internal table does not necessarily shrink,
+while the `ArrayList` simultaneously allocates memory for its own references.
+`Product` objects are not copied, and the input collections remain unmodified.
 
-### Тесты
+### Tests
 
-В таблице указываются названия тестов или ссылки на них. Один тест может проверять несколько условий.
+The table lists test names or links to them. A single test may verify multiple conditions.
 
-| Что проверяется | Тесты |
+| What is being tested | Tests |
 | --- | --- |
-| Обычная подборка; порядок рекомендаций отличается от порядка каталога | `selectsAvailableProductsInRecommendationOrder`, `preservesRecommendationOrderInsteadOfCatalogOrder` |
-| Повторяющиеся рекомендации и исключения | `ignoresDuplicateRecommendationsAndExcludedIds` |
-| Недоступные, исключённые и неизвестные товары | `selectsAvailableProductsInRecommendationOrder`, `skipsUnavailableExcludedAndUnknownProducts` |
-| Пустой каталог, пустые рекомендации, пустые исключения | `returnsEmptyListWhenCatalogIsEmpty`, `returnsEmptyListWhenThereAreNoRecommendations`, `worksWhenExclusionsAreEmpty` |
-| Ни один товар не подходит | `returnsEmptyListWhenNoProductsMatch` |
-| Входные данные не изменяются; повторные вызовы независимы | `doesNotMutateInputsAndKeepsCallsIndependent` |
+| Standard selection; the order of recommendations differs from the order in the catalog | `selectsAvailableProductsInRecommendationOrder`, `preservesRecommendationOrderInsteadOfCatalogOrder` |
+| Duplicate recommendations and exclusions | `ignoresDuplicateRecommendationsAndExcludedIds` |
+| Unavailable, excluded, and unknown products | `selectsAvailableProductsInRecommendationOrder`, `skipsUnavailableExcludedAndUnknownProducts` |
+| Empty catalog, empty recommendations, empty exclusions | `returnsEmptyListWhenCatalogIsEmpty`, `returnsEmptyListWhenThereAreNoRecommendations`, `worksWhenExclusionsAreEmpty` |
+| No products match | `returnsEmptyListWhenNoProductsMatch` |
+| Inputs remain unchanged; repeated calls are independent | `doesNotMutateInputsAndKeepsCallsIndependent` |
 
-## Необязательное продолжение
+## Optional Follow-up
 
-### Организация решения
+### Solution Structure
 
-**Файлы с реализацией и пример вызова:**
+**Implementation files and usage example:**
 
-- `src/main/kotlin/lab2/LimitedProductSelection.kt` — класс `IndexedProductSelector`.
-- `src/test/kotlin/lab2/LimitedProductSelectionTest.kt` — независимые тесты расширения.
+- `src/main/kotlin/lab2/LimitedProductSelection.kt` — `IndexedProductSelector` class.
+- `src/test/kotlin/lab2/LimitedProductSelectionTest.kt` — independent tests for the extension.
 
 ```kotlin
 val selector = IndexedProductSelector(
-    listOf(
-        Product(1, "Keyboard", true),
-        Product(2, "Mouse", false),
-        Product(3, "Monitor", true)
-    )
+listOf(
+Product(1, "Keyboard", true),
+Product(2, "Mouse", false),
+Product(3, "Monitor", true)
+)
 )
 val first = selector.select(
-    recommendedIds = listOf(3L, 2L, 3L, 1L),
-    excludedIds = listOf(1L),
-    limit = 1
+recommendedIds = listOf(3L, 2L, 3L, 1L),
+excludedIds = listOf(1L),
+limit = 1
 ) // [Product(id=3, name=Monitor, available=true)]
 
 selector.loadCatalog(listOf(Product(4, "Webcam", true)))
 val second = selector.select(
-    recommendedIds = listOf(3L, 4L),
-    excludedIds = emptyList(),
-    limit = 2
+recommendedIds = listOf(3L, 4L),
+excludedIds = emptyList(),
+limit = 2
 ) // [Product(id=4, name=Webcam, available=true)]
 ```
 
-**Что выполняется при загрузке каталога, а что — при каждом запросе? Как обеспечиваются независимость запросов и переход на новый каталог?**
+**What happens when the catalog is loaded, and what happens during each individual request? How is request independence ensured, and how is the transition to a new catalog handled?**
 
-В конструкторе и при вызове `loadCatalog(products)` строится отдельная `HashMap<Long, Product>`, 
-содержащая только доступные товары. При каждом `select` общий индекс не изменяется: 
-создаются `HashSet<Long>` для исключённых ID и добавленных в результат ID, 
-а также `ArrayList<Product>` для результата.
-`loadCatalog` полностью заменяет индекс, поэтому старые товары после перезагрузки не участвуют в 
-новых запросах.
+Within the constructor and upon calling `loadCatalog(products)`, a separate `HashMap<Long, Product>` is constructed, containing only the available products. During each `select` operation, the master index remains unchanged; instead, a `HashSet<Long>` is created to track excluded IDs and IDs already added to the result set, alongside an `ArrayList<Product>` to store the final results. Since `loadCatalog` completely replaces the index, products from the previous version are no longer included in subsequent requests.
 
-**Когда прекращается просмотр рекомендаций? От чего зависит число просмотренных элементов?**
+**When does the processing of recommendations stop? What determines the number of items examined?**
 
-При `limit = 0` возвращается пустой список без просмотра рекомендаций. 
-В остальных случаях рекомендации просматриваются слева направо до заполнения `limit` 
-подходящими уникальными товарами либо до конца списка. Проверка лимита расположена сразу 
-после добавления товара, поэтому конец списка не читается. Количество просмотренных рекомендаций 
-`q` зависит от расположения подходящих ID, исключений, недоступных и неизвестных товаров, 
-а также повторений.
+If `limit = 0`, an empty list is returned without processing any recommendations. In all other cases, recommendations are scanned from left to right until either the `limit` is reached with unique, valid products, or the end of the list is encountered. The limit check occurs immediately after a product is added, ensuring that the remainder of the list is not read. The number of recommendations examined, `q`, depends on the positions of valid IDs, exclusions, unavailable or unknown products, and the presence of duplicates.
 
-### Сложность
+### Complexity
 
-Обозначения:
-- `p` — размер загружаемого каталога 
-- `e` — число исключений в запросе
-- `r` — длина рекомендаций
-- `q` — число фактически прочитанных рекомендаций (`q ≤ r`)
-- `k` — число товаров в результате (`k ≤ min(p, q, limit)`). Хеш-операции оцениваются в среднем за O(1).
+Notation:
+- `p` — size of the loaded catalog
+- `e` — number of exclusions in a request
+- `r` — length of the recommendations list
+- `q` — number of recommendations actually read (`q ≤ r`)
+- `k` — number of products in the result set (`k ≤ min(p, q, limit)`). Hash operations are assumed to have an average time complexity of O(1).
 
-| Этап | Время | Дополнительная память |
+| Stage | Time | Additional Memory |
 | --- | --- | --- |
-| Подготовка каталога | O(p) | O(p) для общего индекса |
-| Один запрос | O(e + q) | O(e + k) для исключений и уже добавленных ID; результат отдельно O(k) |
+| Catalog preparation | O(p) | O(p) for the master index |
+| Single request | O(e + q) | O(e + k) for exclusions and already-added IDs; the result itself is O(k) |
 
-**Обоснование оценок и память для результата:**
+**Justification of complexity estimates and memory usage for the result:**
 
-Один проход по каталогу выполняется только при его загрузке или замене. 
-Один запрос строит множество исключений за O(e), 
-затем делает O(1) хеш-проверок на каждую из `q` просмотренных рекомендаций. 
-Множество добавленных ID содержит максимум `k` элементов. 
-Сам результат — `ArrayList<Product>` из `k` ссылок, то есть O(k) памяти, 
-суммарно запросу нужно O(e + k) памяти с учётом результата. 
-Создание индексов требует O(p) независимо от числа запросов. 
-При нулевом лимите запрос заканчивается за O(1).
+A single pass over the catalog is performed only when it is loaded or replaced.
+A single query constructs a set of exclusions in O(e) time,
+followed by O(1) hash-based checks for each of the `q` recommendations examined.
+The set of added IDs contains at most `k` elements.
+The result itself is an `ArrayList<Product>` containing `k` references, requiring O(k) memory;
+in total, the query requires O(e + k) memory, including the result.
+Building the indices requires O(p) time, regardless of the number of queries.
+If the limit is zero, the query completes in O(1) time.
 
-### Проверка продолжения
+**Verification of execution flow**
 
-| Что проверяется | Тесты |
+| Scenario being tested | Tests |
 | --- | --- |
-| Нулевой лимит | `returnsEmptyWhenLimitIsZeroWithoutReadingRecommendations` |
-| Досрочное заполнение результата | `stopsReadingRecommendationsAsSoonAsLimitIsReached`, `skipsRejectedRecommendationsAndThenStopsAtLimit` |
-| Подходящих товаров меньше лимита | `returnsAllMatchingProductsWhenLimitIsLargerThanResult`, `returnsEmptyListWhenNoRecommendationsQualify` |
-| Несколько независимых запросов к одному каталогу | `requestsRemainIndependentAndInputsAreUnchanged`, `changingOriginalCatalogListDoesNotChangeLoadedIndex` |
-| Переход на новый каталог | `reloadingCatalogReplacesAllPreviousProducts`, `changingOriginalCatalogListDoesNotChangeLoadedIndex` |
+| Zero limit | `returnsEmptyWhenLimitIsZeroWithoutReadingRecommendations` |
+| Early completion (result filled before exhausting recommendations) | `stopsReadingRecommendationsAsSoonAsLimitIsReached`, `skipsRejectedRecommendationsAndThenStopsAtLimit` |
+| Fewer matching products than the limit | `returnsAllMatchingProductsWhenLimitIsLargerThanResult`, `returnsEmptyListWhenNoRecommendationsQualify` |
+| Multiple independent queries on the same catalog | `requestsRemainIndependentAndInputsAreUnchanged`, `changingOriginalCatalogListDoesNotChangeLoadedIndex` |
+| Switching to a new catalog | `reloadingCatalogReplacesAllPreviousProducts`, `changingOriginalCatalogListDoesNotChangeLoadedIndex` |
 
-Дополнительно проверяются неизвестные, недоступные и исключённые товары, повторы, 
-пустой каталог и пустые рекомендации.
+Additionally, the implementation is verified against cases involving unknown, unavailable, or excluded products, duplicates,
+an empty catalog, and empty recommendation lists. **How ​​is the early termination confirmed?**
 
-**Как подтверждено досрочное завершение?**
-
-Тест `stopsReadingRecommendationsAsSoonAsLimitIsReached` передаёт **1000 рекомендаций**, 
-первые две из которых подходят, с **`limit = 2`**. 
-Специальный `CountingRecommendations : AbstractList<Long>` 
-увеличивает счётчик в `get(index)`: после выполнения **прочитано ровно 2 элемента**, 
-а в результате находятся оба ожидаемых полных объекта `Product`. 
-Дополнительный тест `skipsRejectedRecommendationsAndThenStopsAtLimit` показывает, 
-что при неизвестных, недоступных, исключённых и повторяющихся ID до заполнения лимита 
-прочитывается 6 из 7 рекомендаций.
+The test `stopsReadingRecommendationsAsSoonAsLimitIsReached` provides **1,000 recommendations**—the first two of which are valid—with a **`limit = 2`**.
+A custom `CountingRecommendations : AbstractList<Long>` class increments a counter within its `get(index)` method;
+upon execution, exactly **2 elements are read**, and the result contains both expected, fully-populated `Product` objects.
+An additional test, `skipsRejectedRecommendationsAndThenStopsAtLimit`, demonstrates that when the input includes unknown, unavailable, excluded, or duplicate IDs,
+the process reads 6 out of the 7 available recommendations before reaching the specified limit.
